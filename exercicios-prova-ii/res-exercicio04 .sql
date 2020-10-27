@@ -1,0 +1,36 @@
+
+-- 1. Criar uma tabela TB_FUNCIONARIO com os 
+-- seguintes atributos: MATRICULA, NOME, DEPARTAMENTO, SALARIO, GRATIFICACAO.
+-- A Matricula representa a chave primária. 
+
+CREATE TABLE TB_FUNCIONARIO (
+   MATRICULA INT NOT NULL PRIMARY KEY,
+   NOME VARCHAR(40) NOT NULL,
+   DEPARTAMENTO INT NOT NULL,
+   SALARIO NUMERIC (10,2) NULL,
+   GRATIFICACAO NUMERIC(10,2) NULL
+)
+
+
+-- 2. Criar uma Trigger na tabela TB_FUNCIONARIO que garanta 
+-- que o Salário Bruto de um Funcionário (SALARIO + GRATIFICACAO) 
+-- não possa sofrer um aumento de mais de 30%. Obs: O novo SALARIO
+-- e a nova GRATIFICACAO poderão assumir valores NULOS (NULL).
+
+CREATE TRIGGER TG_UPDATE_FUNCIONARIO
+ON TB_FUNCIONARIO
+AFTER UPDATE
+AS
+
+IF EXISTS (
+SELECT 1
+FROM INSERTED I 
+     JOIN DELETED D ON (I.MATRICULA = D.MATRICULA)
+WHERE 
+   isnull(I.SALARIO,0) + isnull(I.GRATIFICACAO,0) > 1.3 * (
+   isnull(D.SALARIO,0) + isnull(D.GRATIFICACAO,0) )
+)
+  BEGIN
+	RAISERROR('AUMENTO INVÁLIDO', 1,1)
+	ROLLBACK 
+  END
